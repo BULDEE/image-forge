@@ -12,6 +12,7 @@ import argparse
 import base64
 import json
 import sys
+import tempfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -89,15 +90,28 @@ def inspect(args: argparse.Namespace) -> int:
 
 
 def sheet(args: argparse.Namespace) -> int:
+    """Embed downscaled copies, not the originals.
+
+    A contact sheet exists to be opened. Embedding full renders twice per card
+    produced a 4.8 MB page for two images, so the cards carry a card-sized copy
+    and a thumbnail-sized one instead.
+    """
     cards = []
-    for name in args.images:
-        path = Path(name).expanduser()
-        encoded = base64.b64encode(path.read_bytes()).decode("ascii")
-        cards.append(
-            f'<figure><img src="data:image/png;base64,{encoded}" alt="{path.stem}">'
-            f'<img class="small" src="data:image/png;base64,{encoded}" alt="{path.stem} small">'
-            f"<figcaption>{path.stem}</figcaption></figure>"
-        )
+    with tempfile.TemporaryDirectory() as workdir:
+        scratch = Path(workdir)
+        for name in args.images:
+            path = Path(name).expanduser()
+            large = base64.b64encode(
+                pngtools.downscale(path, args.card, scratch / f"{path.stem}-card.png").read_bytes()
+            ).decode("ascii")
+            small = base64.b64encode(
+                pngtools.downscale(path, args.thumb, scratch / f"{path.stem}-thumb.png").read_bytes()
+            ).decode("ascii")
+            cards.append(
+                f'<figure><img src="data:image/png;base64,{large}" alt="{path.stem}">'
+                f'<img class="small" src="data:image/png;base64,{small}" alt="{path.stem} small">'
+                f"<figcaption>{path.stem}</figcaption></figure>"
+            )
     out = Path(args.out).expanduser()
     out.write_text(_SHEET_TEMPLATE.replace("<!--CARDS-->", "\n".join(cards)), encoding="utf-8")
     print(f"{out}  contact sheet with {len(cards)} image(s)")
@@ -114,11 +128,11 @@ main { display:grid; gap:24px; grid-template-columns:repeat(auto-fill,minmax(200
 figure { margin:0; border:1px solid var(--line); border-radius:12px; padding:12px;
          display:grid; gap:8px; justify-items:center; }
 figure img { width:100%; height:auto; border-radius:8px; }
-figure img.small { width:32px; height:32px; image-rendering:auto; }
+figure img.small { width:48px; height:48px; image-rendering:auto; }
 figcaption { font-size:12px; opacity:.7; }
 </style>
 <h1>Contact sheet</h1>
-<p>Each card shows the render and the same file at 32 pixels. Judge the small one.</p>
+<p>Each card shows the render and the same file at thumbnail size. Judge the small one.</p>
 <main>
 <!--CARDS-->
 </main>
@@ -188,6 +202,8 @@ def build_parser() -> argparse.ArgumentParser:
     sheet_parser = sub.add_parser("sheet", help="build an HTML contact sheet for review")
     sheet_parser.add_argument("images", nargs="+")
     sheet_parser.add_argument("--out", required=True)
+    sheet_parser.add_argument("--card", type=int, default=384, help="embedded card size in pixels")
+    sheet_parser.add_argument("--thumb", type=int, default=48, help="embedded thumbnail size in pixels")
     sheet_parser.set_defaults(handler=sheet)
 
     list_parser = sub.add_parser("providers", help="list registered providers")

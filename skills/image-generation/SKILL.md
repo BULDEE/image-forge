@@ -38,6 +38,22 @@ doppler run -- ${CLAUDE_PLUGIN_ROOT}/skills/image-generation/scripts/forge.py re
 missing the command says which variable it wanted; do not work around it by
 reading the secret into a shell variable.
 
+A privacy guard may sit in front of the wrapper and refuse the command. It
+matches text and does not parse shell, so three forms fail for reasons the
+error message will not spell out:
+
+- a redirection on the render (`... render > /tmp/forge.log`). The script
+  already writes `<out>.json` beside the image; read that back instead.
+- an explicit interpreter (`run -- python3 forge.py`). `forge.py` is
+  executable; call it directly.
+- a variable whose name reads as a secret (`$OPENAI_API_KEY` on the command
+  line). Let the wrapper inject it; never name it yourself.
+
+Chaining is fine: `&&`, a pipe, a heredoc written on an earlier line and a
+backslash continuation all pass. The prompt file is the exception worth
+knowing: write it in its own command when its text quotes shell commands, then
+render with `--prompt-file`.
+
 ## Choosing a provider
 
 | Provider | Reach for it when | Notes |
