@@ -1,0 +1,40 @@
+{
+  "name": "image-forge",
+  "displayName": "Image Forge",
+  "version": "0.1.0",
+  "description": "Provider-agnostic image generation from the terminal: OpenAI GPT Image, Gemini, and MCP-backed generators, with a prompting doctrine and a critique loop that verifies the render before the set is produced.",
+  "author": {
+    "name": "Alexandre Mallet",
+    "url": "https://github.com/BULDEE"
+  },
+  "repository": "https://github.com/BULDEE/image-forge",
+  "license": "MIT",
+  "keywords": [
+    "image-generation",
+    "prompt-engineering",
+    "openai",
+    "gemini",
+    "icons",
+    "design"
+  ],
+  "userConfig": {
+    "secret_command": {
+      "type": "string",
+      "title": "Secret manager wrapper",
+      "description": "Command prefix that injects provider API keys into the environment, for example 'doppler run --'. Leave empty to use the ambient environment.",
+      "default": ""
+    },
+    "default_provider": {
+      "type": "string",
+      "title": "Default provider",
+      "description": "Provider used when none is passed: openai, gemini.",
+      "default": "openai"
+    },
+    "output_dir": {
+      "type": "directory",
+      "title": "Default output directory",
+      "description": "Where renders land when no --out path is given."
+    }
+  },
+  "homepage": "https://github.com/BULDEE/image-forge"
+}
