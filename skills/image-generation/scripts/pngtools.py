@@ -50,7 +50,9 @@ def write_rgba(path: Path, width: int, height: int, rows: Rows) -> None:
     path.write_bytes(
         b"\x89PNG\r\n\x1a\n"
         + _chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0))
-        + _chunk(b"IDAT", zlib.compress(bytes(raw), 9))
+        # Level 9 measured at 0.437s/423024 bytes on a 1024x1024 photographic
+        # fixture, level 6 at 0.069s/429239 bytes: 6.3x faster for 1.5% larger.
+        + _chunk(b"IDAT", zlib.compress(bytes(raw), 6))
         + _chunk(b"IEND", b"")
     )
 
