@@ -1,0 +1,14 @@
+{
+  "name": "image-forge",
+  "owner": {
+    "name": "Alexandre Mallet",
+    "url": "https://github.com/BULDEE"
+  },
+  "plugins": [
+    {
+      "name": "image-forge",
+      "source": "./",
+      "description": "Provider-agnostic image generation with a verified review loop: OpenAI GPT Image, Gemini, MCP-backed generators"
+    }
+  ]
+}
